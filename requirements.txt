@@ -1,5 +1,5 @@
 asgiref>=3.8.0
-Django>=6.0.0,<7.0.0
+Django>=4.2.0,<6.0.0
 Pillow>=10.0.0
 pymysql>=1.1.0
 boto3>=1.34.0

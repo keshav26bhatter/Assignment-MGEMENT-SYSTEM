@@ -9,10 +9,10 @@ set -e
 echo "=== [1/6] Installing packages with dnf/yum ==="
 if command -v dnf &> /dev/null; then
     sudo dnf update -y
-    sudo dnf install -y python3 python3-pip python3-devel nginx gcc
+    sudo dnf install -y python3.11 python3.11-pip python3.11-devel nginx gcc || sudo dnf install -y python3 python3-pip python3-devel nginx gcc
 else
     sudo yum update -y
-    sudo yum install -y python3 python3-pip python3-devel nginx gcc
+    sudo yum install -y python3.11 python3.11-pip python3.11-devel nginx gcc || sudo yum install -y python3 python3-pip python3-devel nginx gcc
 fi
 
 PROJECT_DIR="/home/ec2-user/AssignmentManagementSystem"
@@ -27,7 +27,11 @@ fi
 
 echo "=== [2/6] Setting up Python virtual environment ==="
 rm -rf venv
-python3 -m venv venv
+if command -v python3.11 &> /dev/null; then
+    python3.11 -m venv venv
+else
+    python3 -m venv venv
+fi
 source venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
