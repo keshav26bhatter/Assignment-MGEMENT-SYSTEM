@@ -1,0 +1,184 @@
+{% extends 'assignments/base.html' %}
+
+{% block title %}Student Dashboard - EduAssign{% endblock %}
+{% block page_heading %}Student Dashboard{% endblock %}
+
+{% block content %}
+<!-- Welcome Header -->
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <div>
+        <h4 class="fw-bold mb-1">Hello, {{ request.user.first_name|default:request.user.username }}</h4>
+        <p class="text-muted small mb-0">Track your pending assignments, submissions, and approaching deadlines.</p>
+    </div>
+</div>
+
+<!-- Metrics Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-12 col-sm-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-icon primary">
+                <i class="bi bi-journal-code"></i>
+            </div>
+            <div>
+                <div class="stat-value">{{ total_available }}</div>
+                <div class="stat-label">Total Assignments</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-icon success">
+                <i class="bi bi-check-circle"></i>
+            </div>
+            <div>
+                <div class="stat-value">{{ total_submitted }}</div>
+                <div class="stat-label">Submitted</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-icon warning">
+                <i class="bi bi-exclamation-circle"></i>
+            </div>
+            <div>
+                <div class="stat-value">{{ pending_count }}</div>
+                <div class="stat-label">Pending Tasks</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-icon info">
+                <i class="bi bi-hourglass-split"></i>
+            </div>
+            <div>
+                <div class="stat-value">{{ upcoming_deadlines|length }}</div>
+                <div class="stat-label">Upcoming Deadlines</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- List of Available Assignments -->
+    <div class="col-12 col-lg-8">
+        <div class="card-portal h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span class="d-flex align-items-center gap-2">
+                    <i class="bi bi-card-checklist text-primary"></i>
+                    Available Course Assignments
+                </span>
+                <span class="badge bg-light text-dark border">{{ assignment_list|length }} total</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table mb-0 align-middle">
+                        <thead>
+                            <tr>
+                                <th>Assignment</th>
+                                <th>Instructor</th>
+                                <th>Due Date</th>
+                                <th>Status</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for entry in assignment_list %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-semibold text-dark">{{ entry.assignment.title }}</div>
+                                        <small class="text-muted text-truncate d-inline-block" style="max-width: 240px;">{{ entry.assignment.description|truncatewords:8 }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="small text-secondary">
+                                            {{ entry.assignment.created_by.get_full_name|default:entry.assignment.created_by.username }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if entry.is_overdue and not entry.is_submitted %}bg-danger-subtle text-danger border border-danger-subtle{% else %}bg-light text-dark border{% endif %}">
+                                            {{ entry.assignment.due_date|date:"M d, Y H:i" }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if entry.is_submitted %}
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                                <i class="bi bi-check2"></i> Submitted
+                                            </span>
+                                            {% if entry.submission.marks is not None %}
+                                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle ms-1">
+                                                    {{ entry.submission.marks }}/100
+                                                </span>
+                                            {% endif %}
+                                        {% elif entry.is_overdue %}
+                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
+                                                Overdue
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">
+                                                Pending
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        <a href="{% url 'student_assignment_detail' entry.assignment.id %}" class="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1">
+                                            {% if entry.is_submitted %}
+                                                <i class="bi bi-eye"></i> View Work
+                                            {% else %}
+                                                <i class="bi bi-cloud-arrow-up"></i> Submit
+                                            {% endif %}
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-5">
+                                        <i class="bi bi-journal-x fs-1 d-block text-secondary mb-2"></i>
+                                        No assignments available right now.
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upcoming Deadlines Sidebar Card -->
+    <div class="col-12 col-lg-4">
+        <div class="card-portal h-100">
+            <div class="card-header">
+                <span class="d-flex align-items-center gap-2">
+                    <i class="bi bi-alarm text-warning"></i>
+                    Upcoming Deadlines
+                </span>
+            </div>
+            <div class="card-body p-3">
+                {% if upcoming_deadlines %}
+                    <div class="list-group list-group-flush">
+                        {% for item in upcoming_deadlines %}
+                            <div class="list-group-item px-0 py-2 border-bottom">
+                                <div class="fw-semibold text-dark small mb-1">{{ item.title }}</div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">
+                                        <i class="bi bi-clock me-1"></i> {{ item.due_date|date:"M d, H:i" }}
+                                    </small>
+                                    <span class="badge bg-secondary-subtle text-secondary small">
+                                        {{ item.created_by.get_full_name|default:item.created_by.username }}
+                                    </span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="bi bi-emoji-smile fs-2 d-block text-secondary mb-2"></i>
+                        No approaching deadlines.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

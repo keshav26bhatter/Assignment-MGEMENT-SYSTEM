@@ -1,0 +1,145 @@
+{% extends 'assignments/base.html' %}
+
+{% block title %}{{ assignment.title }} - EduAssign{% endblock %}
+{% block page_heading %}Assignment Details{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- Assignment Information Card -->
+    <div class="col-12 col-lg-7">
+        <div class="card-portal h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span class="d-flex align-items-center gap-2">
+                    <i class="bi bi-file-text text-primary"></i>
+                    <span>Assignment Brief</span>
+                </span>
+                <a href="{% url 'student_dashboard' %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left"></i> Dashboard
+                </a>
+            </div>
+            <div class="card-body p-4">
+                <h4 class="fw-bold text-dark mb-2">{{ assignment.title }}</h4>
+
+                <div class="d-flex flex-wrap gap-3 mb-4 text-muted small">
+                    <div>
+                        <i class="bi bi-person me-1"></i> Instructor: <strong>{{ assignment.created_by.get_full_name|default:assignment.created_by.username }}</strong>
+                    </div>
+                    <div>
+                        <i class="bi bi-calendar-event me-1"></i> Due: <strong>{{ assignment.due_date|date:"M d, Y H:i" }}</strong>
+                    </div>
+                    <div>
+                        {% if is_overdue %}
+                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Past Deadline</span>
+                        {% else %}
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">Active</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <h6 class="fw-bold mb-2">Instructions:</h6>
+                <div class="p-3 bg-light rounded border mb-4 text-secondary" style="white-space: pre-wrap; line-height: 1.6;">{{ assignment.description }}</div>
+
+                {% if assignment.file %}
+                    <div class="p-3 bg-primary-subtle border border-primary-subtle rounded d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-file-earmark-arrow-down-fill text-primary fs-4"></i>
+                            <div>
+                                <div class="fw-semibold text-primary">Instructor Attachment / Rubric</div>
+                                <small class="text-secondary">Download instructions file</small>
+                            </div>
+                        </div>
+                        <a href="{{ assignment.file.url }}" target="_blank" class="btn btn-primary btn-sm">
+                            <i class="bi bi-download"></i> Download
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Submission Section -->
+    <div class="col-12 col-lg-5">
+        <div class="card-portal h-100">
+            <div class="card-header">
+                <span class="d-flex align-items-center gap-2">
+                    <i class="bi bi-cloud-arrow-up text-primary"></i>
+                    <span>Your Submission</span>
+                </span>
+            </div>
+            <div class="card-body p-4">
+                {% if submission %}
+                    <!-- Already Submitted State -->
+                    <div class="alert alert-success d-flex align-items-center gap-2 mb-4" role="alert">
+                        <i class="bi bi-check-circle-fill fs-5"></i>
+                        <div>
+                            <strong>Assignment Submitted!</strong>
+                            <div class="small">Received on {{ submission.submitted_at|date:"M d, Y H:i" }}</div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label text-muted small fw-semibold">Submitted File:</label>
+                        <div>
+                            <a href="{{ submission.file.url }}" target="_blank" class="btn btn-outline-danger btn-sm d-inline-flex align-items-center gap-2">
+                                <i class="bi bi-file-earmark-pdf"></i> View Submitted PDF
+                            </a>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <!-- Evaluation & Feedback -->
+                    <h6 class="fw-bold mb-3">Evaluation & Teacher Feedback</h6>
+                    {% if submission.marks is not None %}
+                        <div class="mb-3">
+                            <div class="text-muted small">Score:</div>
+                            <div class="display-6 fw-bold text-success">{{ submission.marks }} <span class="fs-5 text-muted">/ 100</span></div>
+                        </div>
+                        {% if submission.feedback %}
+                            <div class="mb-3">
+                                <div class="text-muted small mb-1">Feedback:</div>
+                                <div class="p-3 bg-light rounded border text-dark">{{ submission.feedback }}</div>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="p-3 bg-light rounded border text-center text-muted">
+                            <i class="bi bi-hourglass-split fs-3 d-block text-warning mb-2"></i>
+                            Your submission is awaiting evaluation by the instructor.
+                        </div>
+                    {% endif %}
+
+                {% else %}
+                    <!-- Not yet submitted -->
+                    {% if is_overdue %}
+                        <div class="alert alert-danger mb-3" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i> The deadline for this assignment has passed.
+                        </div>
+                    {% endif %}
+
+                    <p class="text-muted small mb-3">
+                        Upload your completed work as a <strong>PDF document</strong>. Ensure all criteria and requirements mentioned in the instructions are met before uploading.
+                    </p>
+
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="{{ form.file.id_for_label }}" class="form-label fw-semibold">Select PDF File</label>
+                            {{ form.file }}
+                            {% if form.file.errors %}
+                                <div class="text-danger small mt-1">{{ form.file.errors.0 }}</div>
+                            {% endif %}
+                            <div class="form-text small">Accepted format: <code>.pdf</code> only. Single submission allowed.</div>
+                        </div>
+
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-upload me-1"></i> Submit Assignment
+                            </button>
+                        </div>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

@@ -1,0 +1,103 @@
+{% extends 'assignments/base.html' %}
+
+{% block title %}Submissions - {{ assignment.title }}{% endblock %}
+{% block page_heading %}Student Submissions{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <div>
+        <h4 class="fw-bold mb-1">{{ assignment.title }}</h4>
+        <p class="text-muted small mb-0">Due: {{ assignment.due_date|date:"M d, Y H:i" }} | Created: {{ assignment.created_at|date:"M d, Y" }}</p>
+    </div>
+    <div class="d-flex gap-2">
+        {% if assignment.file %}
+            <a href="{{ assignment.file.url }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-file-earmark-arrow-down"></i> Instruction File
+            </a>
+        {% endif %}
+        <a href="{% url 'assignment_edit' assignment.id %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-pencil"></i> Edit Assignment
+        </a>
+        <a href="{% url 'teacher_dashboard' %}" class="btn btn-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+</div>
+
+<div class="card-portal">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="d-flex align-items-center gap-2">
+            <i class="bi bi-file-earmark-check text-primary"></i>
+            <span>All Submitted Works ({{ submissions|length }})</span>
+        </span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th>Student Name</th>
+                        <th>Email</th>
+                        <th>Submission Date</th>
+                        <th>Submitted PDF</th>
+                        <th>Marks</th>
+                        <th>Feedback</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sub in submissions %}
+                        <tr>
+                            <td>
+                                <div class="fw-semibold text-dark">{{ sub.student.get_full_name|default:sub.student.username }}</div>
+                                <small class="text-muted">@{{ sub.student.username }}</small>
+                            </td>
+                            <td>{{ sub.student.email }}</td>
+                            <td>
+                                <span class="small text-muted">{{ sub.submitted_at|date:"M d, Y H:i" }}</span>
+                            </td>
+                            <td>
+                                {% if sub.file %}
+                                    <a href="{{ sub.file.url }}" target="_blank" class="btn btn-sm btn-outline-danger d-inline-flex align-items-center gap-1">
+                                        <i class="bi bi-file-earmark-pdf"></i> View PDF
+                                    </a>
+                                {% else %}
+                                    <span class="text-muted small">No file</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if sub.marks is not None %}
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle fs-6">
+                                        {{ sub.marks }} / 100
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">
+                                        Pending Grading
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <small class="text-muted text-truncate d-inline-block" style="max-width: 200px;">
+                                    {{ sub.feedback|default:"No feedback given" }}
+                                </small>
+                            </td>
+                            <td class="text-end">
+                                <a href="{% url 'evaluate_submission' sub.id %}" class="btn btn-primary btn-sm d-inline-flex align-items-center gap-1">
+                                    <i class="bi bi-pencil-square"></i> {% if sub.marks is not None %}Re-evaluate{% else %}Grade{% endif %}
+                                </a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-5">
+                                <i class="bi bi-inbox fs-1 d-block text-secondary mb-2"></i>
+                                No student submissions received for this assignment yet.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock content %}

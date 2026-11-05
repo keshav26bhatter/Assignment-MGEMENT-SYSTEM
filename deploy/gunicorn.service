@@ -1,0 +1,17 @@
+[Unit]
+Description=Gunicorn daemon for Assignment Management System
+After=network.target
+
+[Service]
+User=ec2-user
+Group=nginx
+WorkingDirectory=/home/ec2-user/AssignmentManagementSystem
+ExecStart=/home/ec2-user/AssignmentManagementSystem/venv/bin/gunicorn \
+          --access-logfile - \
+          --error-logfile - \
+          --workers 3 \
+          --bind unix:/run/gunicorn.sock \
+          config.wsgi:application
+
+[Install]
+WantedBy=multi-user.target
