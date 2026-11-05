@@ -4,13 +4,13 @@ After=network.target
 
 [Service]
 User=ec2-user
-Group=nginx
+Group=ec2-user
 WorkingDirectory=/home/ec2-user/AssignmentManagementSystem
 ExecStart=/home/ec2-user/AssignmentManagementSystem/venv/bin/gunicorn \
           --access-logfile - \
           --error-logfile - \
           --workers 3 \
-          --bind unix:/run/gunicorn.sock \
+          --bind 127.0.0.1:8000 \
           config.wsgi:application
 
 [Install]
