@@ -23,10 +23,10 @@ class StudentRegistrationForm(forms.ModelForm):
         })
     )
     email = forms.EmailField(
-        required=True,
+        required=False,
         widget=forms.EmailInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Enter email address',
+            'placeholder': 'Enter email address (optional)',
             'autocomplete': 'email',
         })
     )
@@ -60,7 +60,7 @@ class StudentRegistrationForm(forms.ModelForm):
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
-        if User.objects.filter(email__iexact=email).exists():
+        if email and User.objects.filter(email__iexact=email).exists():
             raise forms.ValidationError("An account with this email address already exists.")
         return email
 
